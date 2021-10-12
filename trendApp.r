@@ -5,6 +5,7 @@ library("dplyr")
 library("ggplot2")
 library("tidyr")
 
+
 setwd("C:/Users/QinH/OneDrive - Willis Towers Watson/Desktop/PL Trend R")
 
 agg_table <- read_excel("PL_trend_sample_data.xlsx") %>%
@@ -172,17 +173,40 @@ server <- function(input, output) {
   
  output$summary <- renderPrint({
     
-    periods <- c("option 1","option 2","option 3")
-    fit_trend <- c(1,2,3)
-    r_sqrd <- c(6,7,8)
-    mse <- c(3,4,5)
-    summary_table <- data.frame(row.names = periods,fit_trend,r_sqrd,mse)
+    periods <- c("option 1",
+                 "option 2",
+                 "option 3",
+                 "Average")
+    
+    fit_trend <- c(fitted_model1()$coef[2],
+                   fitted_model2()$coef[2],
+                   fitted_model3()$coef[2])
+    
+    r_sqrd <- c(summary(fitted_model1())$r.squared,
+                summary(fitted_model2())$r.squared,
+                summary(fitted_model3())$r.squared)
+    
+    mse <- c(mean(fitted_model1()$residuals^2),
+             mean(fitted_model2()$residuals^2),
+             mean(fitted_model3()$residuals^2))
+    
+    summary_table <- data.frame(fit_trend,
+                                r_sqrd,
+                                mse) %>%
+      rbind( c( mean(fit_trend),mean(r_sqrd),mean(mse))) %>%
+      mutate(across(where(is.numeric), ~ round (., digits = 3)))
+      
+    rownames(summary_table) <- periods
+      
+      
+    
     print(summary_table)
     
   })
   
   output$table <- renderTable({
-    fitted_modelall()
+    combined_results()
+    
   })
 }
 
