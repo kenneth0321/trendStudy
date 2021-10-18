@@ -4,7 +4,8 @@ library("dplyr")
 library("ggplot2")
 library("tidyr")
 
-setwd("C:/Users/QinH/OneDrive - Willis Towers Watson/Desktop/PL Trend R")
+#setwd("C:/Users/QinH/OneDrive - Willis Towers Watson/Desktop/PL Trend R")
+setwd("F:/Hao Qin/trendStudy")
 
 agg_table <- read_excel("PL_trend_sample_data.xlsx") %>%
   clean_names()
@@ -13,7 +14,7 @@ b <- switch(1,"claim_freq","loss_severity","loss_ratio")
 
 #uses all year data to fit a curve and then predict new year
 agg_table$claim_freq <- agg_table$ult_claim_count/agg_table$on_level_premium*1000 
-exponetial.modelF<-lm( log(b[]) ~ acc_year, data = agg_table)
+exponetial.modelF<-lm( as.formula(paste("log(",b,") ~ acc_year")), data = agg_table)
 
 summary(exponetial.modelF)
 
@@ -72,8 +73,8 @@ testPlot <- ggplot(agg_table,aes(x=acc_year,y=claim_freq)) +
 
 testPlot
 
-
-
+periods <- c(paste(min(period_1),max(period_1),sep = "-"))
+periods
 
 
 

@@ -6,7 +6,8 @@ library("ggplot2")
 library("tidyr")
 
 
-setwd("C:/Users/QinH/OneDrive - Willis Towers Watson/Desktop/PL Trend R")
+#setwd("C:/Users/QinH/OneDrive - Willis Towers Watson/Desktop/PL Trend R")
+setwd("F:/Hao Qin/trendStudy")
 
 agg_table <- read_excel("PL_trend_sample_data.xlsx") %>%
   clean_names()
@@ -75,9 +76,14 @@ ui <- fluidPage(
       
       # Output: tabset w/ plot, summary and table ----
       tabsetPanel(type = "tabs",
-                  tabPanel("Plot", plotOutput("plot_trend")),
-                  tabPanel("Summary",verbatimTextOutput("summary")),
-                  tabPanel("Table", tableOutput("table"))
+                  tabPanel("Long-term trend", 
+                           plotOutput("plot_trend"), 
+                           verbatimTextOutput("summary")),
+                  
+                  tabPanel("Short-term trend"#, 
+                           #plotOutput("plot_trend_short"), 
+                           #verbatimTextOutput("summary")
+                           )
       
     )
     )
@@ -86,6 +92,7 @@ ui <- fluidPage(
 # Define server logic for slider examples ----
 server <- function(input, output) {
   
+  # selection parameter ----
   b <-  reactive({
     basis <-switch(input$trend_basis,
                    "freq" = "claim_freq",
@@ -95,6 +102,7 @@ server <- function(input, output) {
   })
   
   # Reactive expression to create data frame of all input values ----
+  # long-term fitted trends
   fitted_modelall <- reactive({
     f <- as.formula(paste("log(",b(),") ~ acc_year"))
     
@@ -152,7 +160,7 @@ server <- function(input, output) {
   })
   
 
-  # Show the values in an HTML graph ----
+  # Show the long-term trend in graph ----
   output$plot_trend <- renderPlot({
     
     
@@ -170,12 +178,12 @@ server <- function(input, output) {
     
   })
   
-  
+  # show the long-term trend statistics ----
  output$summary <- renderPrint({
     
-    periods <- c("option 1",
-                 "option 2",
-                 "option 3",
+    periods <- c(paste(min(input$option_1),max(input$option_1),sep = "-"),
+                 paste(min(input$option_2),max(input$option_2),sep = "-"),
+                 paste(min(input$option_3),max(input$option_3),sep = "-"),
                  "Average")
     
     fit_trend <- c(fitted_model1()$coef[2],
@@ -197,23 +205,59 @@ server <- function(input, output) {
       mutate(across(where(is.numeric), ~ round (., digits = 3)))
       
     rownames(summary_table) <- periods
-      
-      
     
     print(summary_table)
     
   })
   
-  output$table <- renderTable({
-    combined_results()
-    
-  })
+  
+  
+  
+  #----------------------------------------------------------------------------------------------
+  
+  # short-term fitted trends
+  
+  ## could not use cbind, since now the model is fitted only on the selected years, not all years##
+  
+  #combined_results_short<- reactive({
+  #  
+  #  fitted.s.p1 <- exp(predict(fitted_model1(), newdata = input$option_1, type = "response"))
+  #  fitted.s.p2 <- exp(predict(fitted_model2(), newdata = input$option_2, type = "response"))
+  #  fitted.s.p3 <- exp(predict(fitted_model3(), newdata = input$option_3, type = "response"))
+  #  
+  #  exp.model.s.df_combined <- fitted_modelall() %>% 
+  #    cbind( option_1 = fitted.s.p1,
+  #           option_2 = fitted.s.p2,
+  #           option_3 = fitted.s.p3) %>%
+  #    gather(model_option, modeled_value, all_year:option_3, factor_key=TRUE)
+  #  
+  #})
+  
+  
+  # Show the long-term trend in graph ----
+  #output$plot_trend_short <- renderPlot({
+  #  
+  #  
+  #  ggplot(agg_table,aes_string(x="acc_year",y=b())) +
+  #    geom_line(linetype=4, size = 2)+
+  #    #geom_smooth(method="loess", formula = y ~ x)+
+  #    
+  #   geom_line(data = combined_results_short(), aes(x = acc_year , y = modeled_value, colour = model_option), size=2, linetype=1)+
+  #    
+  #    scale_x_continuous(breaks = seq(min(period_all$acc_year),max(period_all$acc_year), by = 1))+
+  #    theme_classic()+
+  #    ggtitle("PL Trend")+
+  #    xlab("AY") + ylab(b())
+  #  
+  #  
+  #})
+  
+  
+  
 }
 
 ##__________________________________________________
-# next step, make individule tabs for severity, and LR trends
-# include a toggle for including or excluding a period
-# also need a table to show the modeled factors, R^2, MSE, etc.
+
 
 
 # Create Shiny app ----
