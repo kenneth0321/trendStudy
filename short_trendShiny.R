@@ -67,21 +67,48 @@ agg_table_3 <- agg_table_3 %>%
 join_test1 <- agg_table %>%
   left_join(agg_table_1 %>%
               select(acc_year,fitted1), 
+            by = "acc_year") %>%
+  left_join(agg_table_2 %>%
+              select(acc_year, fitted2),
+            by = "acc_year") %>%
+  left_join(agg_table_3 %>%
+              select(acc_year, fitted3),
             by = "acc_year")
 
+
+
+
+
+
+
+fitted.p1.df <- data.frame(exp(predict(exponetial.modelF1, newdata = period_1, type = "response")))
+joint_test2 <- agg_table %>%
+  left_join(fitted.p1.df %>%
+              mutate(acc_year = period_1$acc_year),
+            by = "acc_year")
+
+
+
+
+
+
+
 #append to a single table
-#exp.model.df <- exp.model.df %>% 
-#  cbind( option_1 = fitted.p1,
-#         option_2 = fitted.p2,
-#         option_3 = fitted.p3) %>%
-#  gather(model_option, modeled_value, all_year:option_3, factor_key=TRUE)
+exp.model.df <- exp.model.df %>%
+  left_join(join_test1 %>%
+              select(acc_year,
+                     fitted1,
+                     fitted2,
+                     fitted3),
+  by = "acc_year") %>%
+    gather(model_option, modeled_value, all_year:fitted3, factor_key=TRUE)
 
 
 # plot(agg_table$acc_year,agg_table$claim_freq, pch=16, ylim = c(1e-7,4e-6),xlim = c(2007,2021))
 # lines(xAxis,fitted.allYear,col="red",xlab="AY", ylab="freqency")
 
-testPlot <- ggplot(agg_table,aes(x=acc_year,y=claim_freq)) +
-  geom_line(linetype=4, size = 2)+
+testPlot <- ggplot(agg_table, aes (x=acc_year,y=loss_ratio)) +
+  geom_line(linetype=4, size = 1)+
   #geom_smooth(method="loess", formula = y ~ x)+
   
   geom_line(data = exp.model.df, aes(x = acc_year , y = modeled_value, colour = model_option), size=2, linetype=1)+
